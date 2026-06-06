@@ -815,7 +815,7 @@ main { flex: 1; padding: 32px; max-width: 900px; margin: 0 auto; width: 100%; }
 </div>
 
 <script>
-const GAS_URL = "https://script.google.com/macros/s/AKfycbzIDMyl6Ywtpv3OghKmIvEENCsQLFuUwCxq-EEcc5lju2cAuggTdmOg23RJC3S0nvALyw/exec";
+const GAS_URL = "https://script.google.com/macros/s/AKfycby5JYCwmAA_9nrWsiXsx9XqA_NpZsu1OuSzC1n_jFsmvqiadORQbaqHqwyVKvml75wmgQ/exec";
 
 // ── ESTADO GLOBAL ────────────────────────────────────────
 const estado = {
@@ -823,9 +823,9 @@ const estado = {
   nombre: null,
   idCandidato: null,
   preguntas: [],
-  momentoActual: 0,          // 0=M1, 1=M2, 2=M3
-  momentos: ["M1","M2","M3"],
-  tiempos: { M1: null, M2: null, M3: null },
+  momentoActual: 0,          // 0=M1, 1=M2, 2=M3, 3=M4
+  momentos: ["M1","M2","M3","M4"],
+  tiempos: { M1: null, M2: null, M3: null, M4: null },
   inicioMomento: null,
   respuestas: {},
 };
@@ -942,7 +942,7 @@ function renderMomento() {
     let cls = "";
     if (idx < estado.momentoActual) cls = "completado";
     else if (idx === estado.momentoActual) cls = "activo";
-    const nombres = { M1: "Perfil Profesional", M2: "Conocimientos Teóricos", M3: "Casos Prácticos" };
+    const nombres = { M1: "Perfil Profesional", M2: "Conocimientos Teóricos", M3: "Casos Prácticos", M4: "Diagnóstico Técnico" };
     html += `
       <div class="momento-item ${cls}">
         <div class="m-label">${mm} — ${nombres[mm]}</div>
@@ -956,7 +956,8 @@ function renderMomento() {
   const titulos = {
     M1: "Perfil Profesional y Desarrollo Continuo",
     M2: "Conocimientos Teóricos",
-    M3: "Casos Prácticos y Toma de Decisiones"
+    M3: "Casos Prácticos y Toma de Decisiones",
+    M4: "Diagnóstico Técnico en Sitio"
   };
 
   html += `
@@ -966,6 +967,62 @@ function renderMomento() {
         <span class="m-badge">${m}</span>
       </div>
       <div class="momento-body">`;
+
+  // Contenido especial M4
+  if (m === "M4") {
+    html += `
+      <div class="pregunta-item">
+        <div class="pregunta-contexto">
+          <strong>🎫 Ticket #TK-2026-0892</strong><br>
+          <strong>Reportado por:</strong> Admisiones &nbsp;|&nbsp; <strong>Prioridad:</strong> Alta &nbsp;|&nbsp; <strong>Categoría:</strong> Soporte Técnico — Hardware y Conectividad<br><br>
+          <strong>Descripción del reporte:</strong><br>
+          Un equipo portátil que estaba en bodega fue solicitado para uso en el área administrativa. Al intentar encenderlo el equipo no arranca. Se requiere que el equipo quede completamente funcional y conectado a la red <strong>WiFi Colegio Visitantes</strong> para validar conectividad antes de asignarlo al usuario.
+        </div>
+        <div class="pregunta-texto" style="margin-top:16px"><strong>Su tarea:</strong></div>
+        <div class="pregunta-contexto" style="border-left-color:var(--acento)">
+          1. Diagnosticar y resolver todas las fallas que encuentre hasta dejar el equipo funcional<br>
+          2. Conectar el equipo a la red <strong>WiFi Colegio Visitantes</strong><br>
+          3. Documentar en el informe técnico:<br>
+          &nbsp;&nbsp;&nbsp;• Fallas encontradas y procedimiento aplicado para cada una<br>
+          &nbsp;&nbsp;&nbsp;• Datos de conexión: IP, puerta de enlace, DNS<br>
+          &nbsp;&nbsp;&nbsp;• Análisis de velocidad de conexión<br>
+          &nbsp;&nbsp;&nbsp;• Conclusión y recomendaciones<br><br>
+          <strong>Entregable:</strong> Informe técnico en PDF — súbalo al finalizar usando el botón de abajo.
+        </div>
+        <div style="margin-top:24px">
+          <label style="display:block;font-size:12px;font-weight:600;color:var(--gris2);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">
+            Subir informe técnico (PDF)
+          </label>
+          <input type="file" id="archivo-m4" accept="application/pdf"
+            style="display:block;width:100%;padding:12px;border:1.5px dashed var(--gris2);border-radius:var(--radio);background:var(--fondo);font-family:'DM Sans',sans-serif;font-size:14px;cursor:pointer;">
+          <p style="font-size:12px;color:var(--gris2);margin-top:6px">Solo archivos PDF. Tamaño máximo: 10 MB.</p>
+          <div id="archivo-nombre" style="display:none;margin-top:10px;padding:10px 14px;background:#e8f0fb;border-radius:var(--radio);font-size:13px;color:var(--azul2)"></div>
+        </div>
+      </div>`;
+
+    html += `
+      </div>
+    </div>
+    <button class="btn-siguiente" id="btn-siguiente" onclick="finalizarM4()">
+      Subir informe y finalizar evaluación
+    </button>`;
+
+    main.innerHTML = html;
+    window.scrollTo(0, 0);
+
+    // Listener para mostrar nombre del archivo seleccionado
+    document.getElementById("archivo-m4").addEventListener("change", function() {
+      const f = this.files[0];
+      const div = document.getElementById("archivo-nombre");
+      if (f) {
+        div.textContent = `✓ Archivo seleccionado: ${f.name} (${(f.size/1024/1024).toFixed(2)} MB)`;
+        div.style.display = "block";
+      } else {
+        div.style.display = "none";
+      }
+    });
+    return;
+  }
 
   // Contexto especial M3
   if (m === "M3") {
@@ -1028,7 +1085,7 @@ function renderMomento() {
 
   const btnLabel = estado.momentoActual < 2
     ? `Guardar y continuar → ${estado.momentos[estado.momentoActual + 1]}`
-    : "Finalizar evaluación";
+    : "Guardar y continuar → M4 Diagnóstico Técnico";
 
   html += `
       </div>
@@ -1139,7 +1196,7 @@ async function avanzarMomento() {
 
   ocultarLoading();
 
-  if (estado.momentoActual < 2) {
+  if (estado.momentoActual < 3) {
     estado.momentoActual++;
     estado.inicioMomento = Date.now();
     renderMomento();
@@ -1156,7 +1213,7 @@ function renderFinalCandidato() {
         <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
       </div>
       <h2>Evaluación completada</h2>
-      <p>Sus respuestas han sido registradas exitosamente.<br>El entrevistador le indicará los siguientes pasos.</p>
+      <p>Sus respuestas e informe técnico han sido registrados exitosamente.<br>El entrevistador le indicará los siguientes pasos.</p>
       <div class="resumen-tiempos">
         <div class="resumen-tiempo-item">
           <div class="t-label">M1 — Perfil</div>
@@ -1170,8 +1227,71 @@ function renderFinalCandidato() {
           <div class="t-label">M3 — Casos Prácticos</div>
           <div class="t-valor">${formatMin(estado.tiempos.M3)}</div>
         </div>
+        <div class="resumen-tiempo-item">
+          <div class="t-label">M4 — Diagnóstico</div>
+          <div class="t-valor">${formatMin(estado.tiempos.M4)}</div>
+        </div>
       </div>
     </div>`;
+}
+
+async function finalizarM4() {
+  const fileInput = document.getElementById("archivo-m4");
+  if (!fileInput || !fileInput.files[0]) {
+    mostrarToast("Debe subir el informe técnico en PDF antes de finalizar.", "err");
+    return;
+  }
+
+  const file = fileInput.files[0];
+  if (file.size > 10 * 1024 * 1024) {
+    mostrarToast("El archivo supera 10 MB. Use un PDF más liviano.", "err");
+    return;
+  }
+
+  // Calcular tiempo M4
+  const ahora = Date.now();
+  const segs = Math.round((ahora - estado.inicioMomento) / 1000);
+  estado.tiempos.M4 = segs;
+
+  mostrarLoading("Subiendo informe técnico...");
+
+  try {
+    // Convertir a base64
+    const base64 = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result.split(",")[1]);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+
+    const res = await api({
+      action: "subirArchivo",
+      idCandidato: estado.idCandidato,
+      nombreCandidato: estado.nombre,
+      archivo: base64,
+      tiempo: formatMin(segs)
+    });
+
+    // Guardar tiempo M4
+    await api({
+      action: "guardarTiempo",
+      id: estado.idCandidato,
+      momento: "M4",
+      tiempo: formatMin(segs)
+    });
+
+    ocultarLoading();
+
+    if (res.ok) {
+      mostrarToast("Informe subido correctamente", "ok");
+      setTimeout(() => renderFinalCandidato(), 1000);
+    } else {
+      mostrarToast("Error al subir el archivo. Intente nuevamente.", "err");
+    }
+  } catch(e) {
+    ocultarLoading();
+    mostrarToast("Error de conexión al subir el archivo.", "err");
+  }
 }
 
 // ══════════════════════════════════════════════════════════
@@ -1344,6 +1464,14 @@ function renderRubrica() {
 
   let html = `<p style="font-size:13px;color:var(--gris2);margin-bottom:16px">Candidato: <strong>${nombreCandidato}</strong> — Calificación del informe técnico M4</p>`;
 
+  // Buscar enlace al PDF en respuestas
+  html += `
+    <div class="resp-card" style="margin-bottom:20px">
+      <div class="rc-meta"><span class="pregunta-num">M4</span><span class="tipo-badge abierta">Informe PDF</span></div>
+      <div class="rc-pregunta">Informe técnico entregado por el candidato</div>
+      <div id="enlace-pdf-${idCandidato}" style="margin-top:8px;font-size:13px;color:var(--gris2)">Buscando informe...</div>
+    </div>`;
+
   rubrica.forEach(r => {
     html += `
       <div class="rubrica-item" id="rub-${r.cod}">
@@ -1360,6 +1488,22 @@ function renderRubrica() {
   });
 
   document.getElementById("zona-rubrica").innerHTML = html;
+
+  // Buscar el PDF en las respuestas del candidato
+  api({ action: "getCalificaciones", idCandidato }).then(res => {
+    const div = document.getElementById(`enlace-pdf-${idCandidato}`);
+    if (!div) return;
+    if (res.ok && res.respuestas) {
+      const informe = res.respuestas.find(r => r.pregunta === "M4-INFORME");
+      if (informe && informe.respuesta.startsWith("http")) {
+        div.innerHTML = `<a href="${informe.respuesta}" target="_blank"
+          style="color:var(--azul2);font-weight:600;text-decoration:none;padding:8px 14px;background:#e8f0fb;border-radius:var(--radio);display:inline-block">
+          📄 Abrir informe técnico en Drive</a>`;
+      } else {
+        div.textContent = "El candidato aún no ha subido el informe.";
+      }
+    }
+  });
 }
 
 async function cargarResultados() {
