@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Evaluación — Líder de Soporte TI</title>
+<title>Prueba Técnica — Opreación Tecnología Administrativa </title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -936,6 +936,24 @@ function renderCandidato() {
   renderMomento();
 }
 
+function campoInforme(id, label, valor = "", readonly = false) {
+  return `
+    <div>
+      <label style="display:block;font-size:11px;font-weight:600;color:var(--gris2);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px">${label}</label>
+      <input type="text" id="${id}" value="${valor}" ${readonly ? "readonly" : ""}
+        style="width:100%;padding:9px 12px;border:1.5px solid var(--gris1);border-radius:var(--radio);font-family:'DM Sans',sans-serif;font-size:14px;background:${readonly ? "var(--gris1)" : "var(--fondo)"};outline:none;">
+    </div>`;
+}
+
+function campoInformeTexto(id, label, rows = 4) {
+  return `
+    <div style="margin-bottom:14px">
+      <label style="display:block;font-size:11px;font-weight:600;color:var(--gris2);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px">${label}</label>
+      <textarea id="${id}" rows="${rows}" placeholder="Escriba aquí..."
+        style="width:100%;padding:10px 14px;border:1.5px solid var(--gris1);border-radius:var(--radio);font-family:'DM Sans',sans-serif;font-size:14px;background:var(--fondo);resize:vertical;outline:none;line-height:1.6;"></textarea>
+    </div>`;
+}
+
 function renderMomento() {
   const main = document.getElementById("main-content");
   const m = estado.momentos[estado.momentoActual];
@@ -986,49 +1004,73 @@ function renderMomento() {
           <strong>Descripción del reporte:</strong><br>
           Un equipo portátil que estaba en bodega fue solicitado para uso en el área administrativa. Al intentar encenderlo el equipo no arranca. Se requiere que el equipo quede completamente funcional y conectado a la red <strong>WiFi Colegio Visitantes</strong> para validar conectividad antes de asignarlo al usuario.
         </div>
-        <div class="pregunta-texto" style="margin-top:16px"><strong>Su tarea:</strong></div>
-        <div class="pregunta-contexto" style="border-left-color:var(--acento)">
+        <div class="pregunta-contexto" style="border-left-color:var(--acento);margin-top:12px">
+          <strong>Su tarea:</strong><br>
           1. Diagnosticar y resolver todas las fallas que encuentre hasta dejar el equipo funcional<br>
           2. Conectar el equipo a la red <strong>WiFi Colegio Visitantes</strong><br>
-          3. Documentar en el informe técnico:<br>
-          &nbsp;&nbsp;&nbsp;• Fallas encontradas y procedimiento aplicado para cada una<br>
-          &nbsp;&nbsp;&nbsp;• Datos de conexión: IP, puerta de enlace, DNS<br>
-          &nbsp;&nbsp;&nbsp;• Análisis de velocidad de conexión<br>
-          &nbsp;&nbsp;&nbsp;• Conclusión y recomendaciones<br><br>
-          <strong>Entregable:</strong> Informe técnico en PDF — súbalo al finalizar usando el botón de abajo.
+          3. Completar el informe técnico a continuación con todos los hallazgos
         </div>
-        <div style="margin-top:24px">
-          <label style="display:block;font-size:12px;font-weight:600;color:var(--gris2);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">
-            Subir informe técnico (PDF)
-          </label>
-          <input type="file" id="archivo-m4" accept="application/pdf"
-            style="display:block;width:100%;padding:12px;border:1.5px dashed var(--gris2);border-radius:var(--radio);background:var(--fondo);font-family:'DM Sans',sans-serif;font-size:14px;cursor:pointer;">
-          <p style="font-size:12px;color:var(--gris2);margin-top:6px">Solo archivos PDF. Tamaño máximo: 10 MB.</p>
-          <div id="archivo-nombre" style="display:none;margin-top:10px;padding:10px 14px;background:#e8f0fb;border-radius:var(--radio);font-size:13px;color:var(--azul2)"></div>
+      </div>
+
+      <!-- INFORME TÉCNICO ESTRUCTURADO -->
+      <div class="pregunta-item">
+        <div class="pregunta-meta"><span class="pregunta-num">INFORME TÉCNICO</span><span class="tipo-badge abierta">M4</span></div>
+
+        <div style="background:var(--azul);color:white;padding:10px 16px;border-radius:6px;font-weight:600;font-size:13px;margin-bottom:16px">
+          I. DATOS GENERALES
         </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
+          ${campoInforme("m4-tipo", "Tipo de elemento")}
+          ${campoInforme("m4-serial", "Número de serie (S/N)")}
+          ${campoInforme("m4-codigo", "Código activo / Placa")}
+          ${campoInforme("m4-marca", "Marca")}
+          ${campoInforme("m4-modelo", "Modelo")}
+          ${campoInforme("m4-ticket", "N° Ticket", "TK-2026-0892", true)}
+        </div>
+
+        <div style="background:var(--azul);color:white;padding:10px 16px;border-radius:6px;font-weight:600;font-size:13px;margin-bottom:16px">
+          II. DIAGNÓSTICO
+        </div>
+
+        ${campoInformeTexto("m4-problema", "II.1 Problema reportado")}
+        ${campoInformeTexto("m4-pruebas", "II.2 Pruebas realizadas (describa cada paso del diagnóstico)", 6)}
+        ${campoInformeTexto("m4-fallas", "II.3 Fallas encontradas y procedimiento aplicado para cada una", 6)}
+
+        <div style="background:var(--azul);color:white;padding:10px 16px;border-radius:6px;font-weight:600;font-size:13px;margin-bottom:16px;margin-top:8px">
+          III. CONECTIVIDAD
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:20px">
+          ${campoInforme("m4-ip", "Dirección IP")}
+          ${campoInforme("m4-gw", "Puerta de enlace (Gateway)")}
+          ${campoInforme("m4-dns", "DNS")}
+        </div>
+        ${campoInformeTexto("m4-velocidad", "Análisis de velocidad de conexión (resultados y observaciones)", 3)}
+
+        <div style="background:var(--azul);color:white;padding:10px 16px;border-radius:6px;font-weight:600;font-size:13px;margin-bottom:16px;margin-top:8px">
+          IV. RESULTADOS
+        </div>
+
+        ${campoInformeTexto("m4-conclusiones", "IV.1 Conclusiones", 4)}
+        ${campoInformeTexto("m4-recomendaciones", "IV.2 Recomendaciones", 4)}
+
+        <div style="background:var(--azul);color:white;padding:10px 16px;border-radius:6px;font-weight:600;font-size:13px;margin-bottom:16px;margin-top:8px">
+          V. OBSERVACIONES
+        </div>
+
+        ${campoInformeTexto("m4-observaciones", "V.1 Otros (observaciones adicionales)", 3)}
       </div>`;
 
     html += `
       </div>
     </div>
     <button class="btn-siguiente" id="btn-siguiente" onclick="finalizarM4()">
-      Subir informe y finalizar evaluación
+      Enviar informe y finalizar evaluación
     </button>`;
 
     main.innerHTML = html;
     window.scrollTo(0, 0);
-
-    // Listener para mostrar nombre del archivo seleccionado
-    document.getElementById("archivo-m4").addEventListener("change", function() {
-      const f = this.files[0];
-      const div = document.getElementById("archivo-nombre");
-      if (f) {
-        div.textContent = `✓ Archivo seleccionado: ${f.name} (${(f.size/1024/1024).toFixed(2)} MB)`;
-        div.style.display = "block";
-      } else {
-        div.style.display = "none";
-      }
-    });
     return;
   }
 
@@ -1244,16 +1286,16 @@ function renderFinalCandidato() {
 }
 
 async function finalizarM4() {
-  const fileInput = document.getElementById("archivo-m4");
-  if (!fileInput || !fileInput.files[0]) {
-    mostrarToast("Debe subir el informe técnico en PDF antes de finalizar.", "err");
-    return;
-  }
-
-  const file = fileInput.files[0];
-  if (file.size > 10 * 1024 * 1024) {
-    mostrarToast("El archivo supera 10 MB. Use un PDF más liviano.", "err");
-    return;
+  // Validar campos obligatorios
+  const obligatorios = ["m4-tipo", "m4-serial", "m4-marca", "m4-modelo", "m4-pruebas", "m4-fallas", "m4-ip", "m4-gw", "m4-dns", "m4-conclusiones"];
+  for (const id of obligatorios) {
+    const el = document.getElementById(id);
+    if (!el || !el.value.trim()) {
+      mostrarToast("Complete todos los campos obligatorios del informe.", "err");
+      el.style.borderColor = "var(--error)";
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
   }
 
   // Calcular tiempo M4
@@ -1261,45 +1303,61 @@ async function finalizarM4() {
   const segs = Math.round((ahora - estado.inicioMomento) / 1000);
   estado.tiempos.M4 = segs;
 
-  mostrarLoading("Subiendo informe técnico...");
+  // Construir informe como texto estructurado
+  const informe = `
+=== INFORME TÉCNICO M4 ===
+TICKET: TK-2026-0892
 
-  try {
-    // Convertir a base64
-    const base64 = await new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result.split(",")[1]);
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
+I. DATOS GENERALES
+Tipo de elemento: ${document.getElementById("m4-tipo").value}
+Serial: ${document.getElementById("m4-serial").value}
+Código activo: ${document.getElementById("m4-codigo").value}
+Marca: ${document.getElementById("m4-marca").value}
+Modelo: ${document.getElementById("m4-modelo").value}
 
-    const res = await api({
-      action: "subirArchivo",
-      idCandidato: estado.idCandidato,
-      nombreCandidato: estado.nombre,
-      archivo: base64,
-      tiempo: formatMin(segs)
-    });
+II. DIAGNÓSTICO
+Problema reportado: ${document.getElementById("m4-problema").value}
+Pruebas realizadas: ${document.getElementById("m4-pruebas").value}
+Fallas y procedimiento: ${document.getElementById("m4-fallas").value}
 
-    // Guardar tiempo M4
-    await api({
-      action: "guardarTiempo",
-      id: estado.idCandidato,
-      momento: "M4",
-      tiempo: formatMin(segs)
-    });
+III. CONECTIVIDAD
+IP: ${document.getElementById("m4-ip").value}
+Gateway: ${document.getElementById("m4-gw").value}
+DNS: ${document.getElementById("m4-dns").value}
+Análisis velocidad: ${document.getElementById("m4-velocidad").value}
 
-    ocultarLoading();
+IV. RESULTADOS
+Conclusiones: ${document.getElementById("m4-conclusiones").value}
+Recomendaciones: ${document.getElementById("m4-recomendaciones").value}
 
-    if (res.ok) {
-      mostrarToast("Informe subido correctamente", "ok");
-      setTimeout(() => renderFinalCandidato(), 1000);
-    } else {
-      mostrarToast("Error al subir el archivo. Intente nuevamente.", "err");
-    }
-  } catch(e) {
-    ocultarLoading();
-    mostrarToast("Error de conexión al subir el archivo.", "err");
-  }
+V. OBSERVACIONES
+${document.getElementById("m4-observaciones").value}
+  `.trim();
+
+  mostrarLoading("Guardando informe técnico...");
+
+  // Guardar informe como respuesta
+  await api({
+    action: "guardarRespuesta",
+    idCandidato: estado.idCandidato,
+    nombreCandidato: estado.nombre,
+    pregunta: "M4-INFORME",
+    momento: "M4",
+    respuesta: informe,
+    tipo: "Informe"
+  });
+
+  // Guardar tiempo M4
+  await api({
+    action: "guardarTiempo",
+    id: estado.idCandidato,
+    momento: "M4",
+    tiempo: formatMin(segs)
+  });
+
+  ocultarLoading();
+  mostrarToast("Informe guardado correctamente", "ok");
+  setTimeout(() => renderFinalCandidato(), 1000);
 }
 
 // ══════════════════════════════════════════════════════════
