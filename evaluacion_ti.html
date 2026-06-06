@@ -848,6 +848,14 @@ function mostrarToast(msg, tipo = "ok") {
 }
 
 async function api(params) {
+  if (params.action === "subirArchivo") {
+    const r = await fetch(GAS_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams(params).toString()
+    });
+    return r.json();
+  }
   const url = GAS_URL + "?" + new URLSearchParams(params).toString();
   const r = await fetch(url);
   return r.json();
