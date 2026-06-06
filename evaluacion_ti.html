@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Prueba Técnica — Opreación Tecnología Administrativa </title>
+<title>Evaluación — Líder de Soporte TI</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -848,15 +848,16 @@ function mostrarToast(msg, tipo = "ok") {
 }
 
 async function api(params) {
-  if (params.action === "subirArchivo") {
+  const body = new URLSearchParams(params).toString();
+  if (body.length > 1500 || params.action === "subirArchivo") {
     const r = await fetch(GAS_URL, {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams(params).toString()
+      body: body
     });
     return r.json();
   }
-  const url = GAS_URL + "?" + new URLSearchParams(params).toString();
+  const url = GAS_URL + "?" + body;
   const r = await fetch(url);
   return r.json();
 }
