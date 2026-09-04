@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Evaluación — Analista de Soporte TI</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --azul:   #1a3a5c;
+  --azul2:  #2563a8;
+  --acento: #e8a020;
+  --fondo:  #f4f1eb;
+  --blanco: #ffffff;
+  --gris1:  #e8e4dc;
+  --gris2:  #9e9890;
+  --texto:  #1c1a17;
+  --ok:     #1a7a4a;
+  --error:  #c0392b;
+  --radio:  6px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'DM Sans', sans-serif; background: var(--fondo); color: var(--texto); min-height: 100vh; font-size: 15px; line-height: 1.6; }
+
+/* LOGIN */
+#pantalla-login { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--azul); }
+.login-card { background: var(--blanco); border-radius: 12px; padding: 52px 48px; width: 420px; box-shadow: 0 32px 80px rgba(0,0,0,0.35); }
+.login-logo { text-align: center; margin-bottom: 36px; }
+.login-logo .icono { width: 64px; height: 64px; background: var(--azul); border-radius: 16px; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 16px; }
+.login-logo .icono svg { width: 34px; height: 34px; fill: none; stroke: var(--acento); stroke-width: 2; }
+.login-logo h1 { font-family: 'DM Serif Display', serif; font-size: 22px; color: var(--azul); line-height: 1.3; }
+.login-logo p { font-size: 13px; color: var(--gris2); margin-top: 4px; }
+.campo { margin-bottom: 18px; }
+.campo label { display: block; font-size: 12px; font-weight: 600; color: var(--gris2); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
+.campo input { width: 100%; padding: 12px 14px; border: 1.5px solid var(--gris1); border-radius: var(--radio); font-family: 'DM Sans', sans-serif; font-size: 15px; outline: none; transition: border-color 0.2s; background: var(--fondo); }
+.campo input:focus { border-color: var(--azul2); background: var(--blanco); }
+.btn-primary { width: 100%; padding: 13px; background: var(--azul); color: var(--blanco); border: none; border-radius: var(--radio); font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 600; cursor: pointer; transition: background 0.2s; margin-top: 8px; }
+.btn-primary:hover { background: var(--azul2); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+.msg-error { background: #fdf0ee; border: 1px solid #f5c6c0; color: var(--error); border-radius: var(--radio); padding: 10px 14px; font-size: 13px; margin-top: 14px; display: none; }
+
+/* LAYOUT */
+#app { display: none; min-height: 100vh; flex-direction: column; }
+header { background: var(--azul); color: var(--blanco); padding: 0 32px; height: 60px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 12px rgba(0,0,0,0.2); }
+header .logo { font-family: 'DM Serif Display', serif; font-size: 17px; display: flex; align-items: center; gap: 10px; }
+header .logo span { background: var(--acento); color: var(--azul); font-family: 'DM Mono', monospace; font-size: 11px; padding: 2px 8px; border-radius: 4px; }
+.header-info { display: flex; align-items: center; gap: 20px; font-size: 13px; }
+.badge-rol { background: rgba(255,255,255,0.15); padding: 4px 12px; border-radius: 20px; font-size: 12px; }
+.badge-rol.entrevistador { background: var(--acento); color: var(--azul); font-weight: 600; }
+#btn-logout { background: transparent; border: 1px solid rgba(255,255,255,0.3); color: var(--blanco); padding: 5px 12px; border-radius: var(--radio); font-size: 12px; cursor: pointer; font-family: 'DM Sans', sans-serif; }
+main { flex: 1; padding: 32px; max-width: 900px; margin: 0 auto; width: 100%; }
+
+/* PASOS */
+.pasos-bar { display: flex; gap: 8px; background: var(--blanco); border-radius: 10px; padding: 20px 24px; margin-bottom: 28px; border: 1px solid var(--gris1); }
+.paso-item { flex: 1; text-align: center; }
+.paso-item .p-label { font-size: 11px; color: var(--gris2); margin-bottom: 6px; font-weight: 500; }
+.paso-item .p-barra { height: 6px; border-radius: 3px; background: var(--gris1); transition: background 0.3s; }
+.paso-item.activo .p-label { color: var(--azul2); font-weight: 600; }
+.paso-item.activo .p-barra { background: var(--azul2); }
+.paso-item.completado .p-barra { background: var(--ok); }
+.paso-item.completado .p-label { color: var(--ok); }
+.tiempo-badge { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--azul2); background: #e8f0fb; padding: 2px 8px; border-radius: 4px; margin-top: 6px; display: inline-block; }
+
+/* TARJETA */
+.card { background: var(--blanco); border-radius: 10px; border: 1px solid var(--gris1); margin-bottom: 20px; overflow: hidden; }
+.card-header { background: var(--azul); color: var(--blanco); padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; }
+.card-header h2 { font-family: 'DM Serif Display', serif; font-size: 18px; }
+.card-badge { background: var(--acento); color: var(--azul); font-family: 'DM Mono', monospace; font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 4px; }
+.card-body { padding: 0; }
+
+/* PREGUNTA */
+.pregunta-item { padding: 22px 24px; border-bottom: 1px solid var(--gris1); }
+.pregunta-item:last-child { border-bottom: none; }
+.pregunta-meta { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.pregunta-num { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--blanco); background: var(--azul2); padding: 2px 8px; border-radius: 3px; }
+.tipo-badge { font-size: 11px; padding: 2px 8px; border-radius: 3px; font-weight: 500; }
+.tipo-badge.abierta { background: #e8f0fb; color: var(--azul2); }
+.tipo-badge.cerrada { background: #fef6e4; color: #b45309; }
+.sc-badge { font-size: 10px; padding: 2px 7px; border-radius: 3px; background: var(--gris1); color: var(--gris2); font-family: 'DM Mono', monospace; }
+.pregunta-texto { font-size: 15px; margin-bottom: 14px; line-height: 1.6; }
+.contexto { background: #f0f4fa; border-left: 3px solid var(--azul2); padding: 12px 16px; border-radius: 0 6px 6px 0; font-size: 13px; margin-bottom: 14px; line-height: 1.6; }
+
+/* OPCIONES CERRADAS */
+.opciones { display: flex; flex-direction: column; gap: 8px; }
+.opcion-label { display: flex; align-items: flex-start; gap: 10px; padding: 10px 14px; border: 1.5px solid var(--gris1); border-radius: var(--radio); cursor: pointer; font-size: 14px; line-height: 1.5; transition: all 0.15s; }
+.opcion-label:hover { border-color: var(--azul2); background: #f0f4fa; }
+.opcion-label.sel { border-color: var(--azul2); background: #e8f0fb; }
+.opcion-label input[type="radio"] { margin-top: 2px; accent-color: var(--azul2); flex-shrink: 0; }
+
+/* TEXTAREA */
+.resp-abierta { width: 100%; min-height: 100px; padding: 12px 14px; border: 1.5px solid var(--gris1); border-radius: var(--radio); font-family: 'DM Sans', sans-serif; font-size: 14px; resize: vertical; outline: none; background: var(--fondo); transition: border-color 0.2s; }
+.resp-abierta:focus { border-color: var(--azul2); background: var(--blanco); }
+
+/* BOTÓN SIGUIENTE */
+.btn-sig { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 14px; background: var(--azul); color: var(--blanco); border: none; border-radius: var(--radio); font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 600; cursor: pointer; transition: background 0.2s; margin-top: 8px; }
+.btn-sig:hover { background: var(--azul2); }
+.btn-sig:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* PANTALLA FINAL */
+.pantalla-final { text-align: center; padding: 60px 32px; background: var(--blanco); border-radius: 12px; border: 1px solid var(--gris1); }
+.pantalla-final .check { width: 72px; height: 72px; background: var(--ok); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px; }
+.pantalla-final .check svg { width: 36px; height: 36px; stroke: white; fill: none; stroke-width: 2.5; }
+.pantalla-final h2 { font-family: 'DM Serif Display', serif; font-size: 28px; color: var(--azul); margin-bottom: 12px; }
+.pantalla-final p { color: var(--gris2); font-size: 15px; }
+.resumen-tiempos { display: flex; justify-content: center; gap: 16px; margin-top: 28px; flex-wrap: wrap; }
+.t-item { background: var(--fondo); border-radius: 8px; padding: 14px 20px; text-align: center; border: 1px solid var(--gris1); }
+.t-item .t-label { font-size: 11px; color: var(--gris2); font-weight: 600; text-transform: uppercase; }
+.t-item .t-valor { font-family: 'DM Mono', monospace; font-size: 20px; color: var(--azul); margin-top: 4px; }
+
+/* VISTA ENTREVISTADOR */
+.tabs { display: flex; gap: 4px; margin-bottom: 24px; background: var(--gris1); padding: 4px; border-radius: 8px; }
+.tab-btn { flex: 1; padding: 9px 16px; border: none; border-radius: 6px; background: transparent; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; color: var(--gris2); cursor: pointer; transition: all 0.2s; }
+.tab-btn.activo { background: var(--blanco); color: var(--azul); font-weight: 600; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+.tab-content { display: none; }
+.tab-content.activo { display: block; }
+.sel-candidato { width: 100%; padding: 11px 14px; border: 1.5px solid var(--gris1); border-radius: var(--radio); font-family: 'DM Sans', sans-serif; font-size: 15px; background: var(--blanco); outline: none; margin-bottom: 20px; cursor: pointer; }
+.sel-candidato:focus { border-color: var(--azul2); }
+
+/* TARJETA RESPUESTA */
+.resp-card { background: var(--blanco); border: 1px solid var(--gris1); border-radius: 8px; padding: 18px 20px; margin-bottom: 14px; }
+.rc-pregunta { font-weight: 600; font-size: 14px; color: var(--azul); margin-bottom: 8px; }
+.rc-respuesta { font-size: 14px; background: var(--fondo); border-radius: 6px; padding: 10px 14px; margin-bottom: 12px; line-height: 1.6; white-space: pre-wrap; max-height: 200px; overflow-y: auto; }
+.calif-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.calif-row label { font-size: 13px; font-weight: 600; color: var(--gris2); white-space: nowrap; }
+.nums-calif { display: flex; gap: 4px; }
+.num-btn { width: 34px; height: 34px; border: 2px solid var(--gris1); border-radius: 6px; background: var(--blanco); font-family: 'DM Mono', monospace; font-size: 13px; font-weight: 600; color: var(--gris2); cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; }
+.num-btn:hover { border-color: var(--acento); color: var(--acento); }
+.num-btn.sel { background: var(--acento); border-color: var(--acento); color: var(--azul); }
+.obs-inp { flex: 1; padding: 8px 12px; border: 1.5px solid var(--gris1); border-radius: var(--radio); font-family: 'DM Sans', sans-serif; font-size: 13px; outline: none; min-width: 120px; }
+.obs-inp:focus { border-color: var(--azul2); }
+.btn-guardar-c { padding: 8px 16px; background: var(--ok); color: var(--blanco); border: none; border-radius: var(--radio); font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+.btn-guardar-c:hover { opacity: 0.85; }
+.btn-guardar-c.guardado { background: var(--gris2); }
+
+/* RESULTADO */
+.resultado-card { background: var(--blanco); border: 1px solid var(--gris1); border-radius: 10px; overflow: hidden; margin-bottom: 20px; }
+.resultado-header { background: var(--azul); color: var(--blanco); padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; }
+.resultado-header h3 { font-family: 'DM Serif Display', serif; font-size: 17px; }
+.puntaje-final { font-family: 'DM Mono', monospace; font-size: 26px; color: var(--acento); }
+.pasos-grid { padding: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.paso-res { background: var(--fondo); border-radius: 8px; padding: 14px 16px; }
+.paso-res .pr-label { font-size: 11px; color: var(--gris2); font-weight: 600; text-transform: uppercase; margin-bottom: 6px; }
+.paso-res .pr-val { font-family: 'DM Mono', monospace; font-size: 22px; }
+.pr-barra-wrap { height: 6px; background: var(--gris1); border-radius: 3px; margin-top: 8px; overflow: hidden; }
+.pr-barra { height: 100%; border-radius: 3px; background: var(--azul2); transition: width 0.6s ease; }
+
+/* P1 preguntas */
+.p1-pregunta { padding: 14px 16px; border-bottom: 1px solid var(--gris1); font-size: 14px; line-height: 1.6; }
+.p1-pregunta:last-child { border-bottom: none; }
+.p1-num { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--azul2); font-weight: 600; margin-bottom: 4px; }
+
+/* REGISTRAR CANDIDATO */
+.form-campo { margin-bottom: 14px; }
+.form-campo label { display: block; font-size: 12px; font-weight: 600; color: var(--gris2); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 5px; }
+.form-campo input { width: 100%; padding: 10px 14px; border: 1.5px solid var(--gris1); border-radius: var(--radio); font-family: 'DM Sans', sans-serif; font-size: 14px; outline: none; background: var(--fondo); }
+.form-campo input:focus { border-color: var(--azul2); background: var(--blanco); }
+.btn-accion { padding: 10px 20px; background: var(--azul); color: var(--blanco); border: none; border-radius: var(--radio); font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+.btn-accion:hover { background: var(--azul2); }
+.btn-accion.verde { background: var(--ok); }
+
+/* P3 */
+.p3-instrucciones { background: #f0f4fa; border-left: 3px solid var(--azul2); padding: 16px 20px; border-radius: 0 8px 8px 0; margin-bottom: 20px; font-size: 14px; line-height: 1.7; }
+.p3-ticket { background: var(--blanco); border: 1px solid var(--gris1); border-radius: 8px; padding: 16px 20px; margin-bottom: 20px; }
+.p3-ticket .t-header { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--gris2); margin-bottom: 10px; }
+.p3-ticket h3 { font-size: 15px; font-weight: 600; color: var(--azul); margin-bottom: 8px; }
+.p3-ticket p { font-size: 14px; line-height: 1.6; }
+.carpeta-btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 20px; background: #1a7a4a; color: white; border-radius: var(--radio); text-decoration: none; font-weight: 600; font-size: 14px; margin: 16px 0; }
+.carpeta-btn:hover { opacity: 0.85; }
+.confirm-check { display: flex; align-items: center; gap: 10px; padding: 14px; border: 1.5px solid var(--gris1); border-radius: var(--radio); cursor: pointer; font-size: 14px; margin-top: 12px; }
+.confirm-check input { accent-color: var(--ok); width: 18px; height: 18px; cursor: pointer; }
+
+/* LOADING / TOAST */
+.loading-overlay { position: fixed; inset: 0; background: rgba(26,58,92,0.7); display: none; align-items: center; justify-content: center; z-index: 1000; }
+.loading-box { background: var(--blanco); border-radius: 12px; padding: 32px 40px; text-align: center; font-size: 15px; color: var(--azul); font-weight: 500; }
+.spinner { display: inline-block; width: 32px; height: 32px; border: 3px solid rgba(26,58,92,0.2); border-top-color: var(--azul); border-radius: 50%; animation: spin 0.7s linear infinite; margin-bottom: 14px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.toast { position: fixed; bottom: 24px; right: 24px; background: var(--azul); color: var(--blanco); padding: 12px 20px; border-radius: 8px; font-size: 14px; font-weight: 500; z-index: 2000; transform: translateY(60px); opacity: 0; transition: all 0.3s; box-shadow: 0 8px 24px rgba(0,0,0,0.2); }
+.toast.show { transform: translateY(0); opacity: 1; }
+.toast.ok { background: var(--ok); }
+.toast.err { background: var(--error); }
+.oculto { display: none !important; }
+</style>
+</head>
+<body>
+
+<div class="loading-overlay" id="loading">
+  <div class="loading-box">
+    <div class="spinner"></div>
+    <div id="loading-msg">Cargando...</div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<!-- LOGIN -->
+<div id="pantalla-login">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="icono">
+        <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <h1>Evaluación<br>Analista de Soporte TI</h1>
+      <p>Colegio Tilatá — Sistema de Evaluación v2.0</p>
+    </div>
+    <div class="campo"><label>Usuario</label><input type="text" id="inp-usuario" placeholder="ej: lmurcia" autocomplete="off"></div>
+    <div class="campo"><label>Contraseña</label><input type="password" id="inp-pass" placeholder="••••••••"></div>
+    <button class="btn-primary" id="btn-login">Ingresar</button>
+    <div class="msg-error" id="login-error"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <header>
+    <div class="logo">Evaluación TI <span>Colegio Tilatá</span></div>
+    <div class="header-info">
+      <span id="header-nombre">—</span>
+      <span class="badge-rol" id="header-rol">—</span>
+      <button id="btn-logout">Salir</button>
+    </div>
+  </header>
+  <main id="main-content"></main>
+</div>
+
+<script>
+const GAS_URL = "https://script.google.com/macros/s/AKfycbxpc0ZPoRFmdeGVUx4Minl-pjMeguP61ozMWVs9lfU2-HVzn2pBoN9n1T3ZAE_T0hV3nw/exec";
+
+const estado = {
+  rol: null, nombre: null, idCandidato: null,
+  preguntas: [],
+  pasoActual: 0,  // 0=P2-M1, 1=P2-M2, 2=P2-M3, 3=P3
+  pasos: ["M1","M2","M3","P3"],
+  tiempos: { M1: null, M2: null, M3: null, P3: null },
+  inicioMomento: null,
+  carpetaDrive: null
+};
+
+// ── UTILIDADES ─────────────────────────────────────────────
+function mostrarLoading(msg="Procesando...") {
+  document.getElementById("loading-msg").textContent = msg;
+  document.getElementById("loading").style.display = "flex";
+}
+function ocultarLoading() { document.getElementById("loading").style.display = "none"; }
+
+function mostrarToast(msg, tipo="ok") {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.className = `toast show ${tipo}`;
+  setTimeout(() => { t.className = "toast"; }, 3000);
+}
+
+async function api(params) {
+  const body = new URLSearchParams(params).toString();
+  if (body.length > 1500) {
+    const r = await fetch(GAS_URL, { method:"POST", headers:{"Content-Type":"application/x-www-form-urlencoded"}, body });
+    return r.json();
+  }
+  const r = await fetch(GAS_URL + "?" + body);
+  return r.json();
+}
+
+function formatMin(seg) {
+  if (!seg) return "--";
+  const m = Math.floor(seg/60), s = seg%60;
+  return `${m}m ${s<10?"0":""}${s}s`;
+}
+
+function numsBtns(id, safeId) {
+  return [1,2,3,4,5,6,7,8,9,10].map(n =>
+    `<button class="num-btn" onclick="selNum('${safeId}',${n},this)">${n}</button>`
+  ).join("");
+}
+
+function selNum(safeId, val, btn) {
+  document.querySelectorAll(`#nums-${safeId} .num-btn`).forEach(b => b.classList.remove("sel"));
+  btn.classList.add("sel");
+  const card = document.getElementById(`card-${safeId}`);
+  if (card) card.dataset.calificacion = val;
+}
+
+// ── LOGIN ───────────────────────────────────────────────────
+document.getElementById("btn-login").addEventListener("click", doLogin);
+document.getElementById("inp-pass").addEventListener("keydown", e => { if(e.key==="Enter") doLogin(); });
+document.getElementById("btn-logout").addEventListener("click", () => location.reload());
+
+async function doLogin() {
+  const usuario  = document.getElementById("inp-usuario").value.trim();
+  const password = document.getElementById("inp-pass").value.trim();
+  if (!usuario || !password) return;
+  const btn = document.getElementById("btn-login");
+  btn.disabled = true; btn.textContent = "Verificando...";
+  mostrarLoading("Verificando credenciales...");
+  try {
+    const res = await api({ action:"login", usuario, password });
+    if (res.ok) {
+      estado.rol    = res.rol;
+      estado.nombre = res.nombre;
+      if (res.id) estado.idCandidato = res.id;
+      iniciarApp();
+    } else {
+      const err = document.getElementById("login-error");
+      err.textContent = res.error;
+      err.style.display = "block";
+    }
+  } catch(e) {
+    document.getElementById("login-error").textContent = "Error de conexión.";
+    document.getElementById("login-error").style.display = "block";
+  }
+  btn.disabled = false; btn.textContent = "Ingresar";
+  ocultarLoading();
+}
+
+// ── INICIAR APP ─────────────────────────────────────────────
+async function iniciarApp() {
+  document.getElementById("pantalla-login").style.display = "none";
+  document.getElementById("app").style.display = "flex";
+  document.getElementById("header-nombre").textContent = estado.nombre;
+  const rolEl = document.getElementById("header-rol");
+  rolEl.textContent = estado.rol === "entrevistador" ? "Entrevistador" : "Candidato";
+  if (estado.rol === "entrevistador") rolEl.classList.add("entrevistador");
+
+  mostrarLoading("Cargando sistema...");
+  const res = await api({ action:"getDatosIniciales" });
+  ocultarLoading();
+
+  if (res.ok) {
+    estado.preguntas = res.preguntas || [];
+    if (estado.rol === "candidato") {
+      const cand = await api({ action:"getCandidato", id: estado.idCandidato });
+      if (cand.ok) estado.carpetaDrive = cand.carpeta;
+      renderCandidato();
+    } else {
+      renderEntrevistador(res.candidatos || []);
+    }
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+// VISTA CANDIDATO
+// ══════════════════════════════════════════════════════════
+function renderCandidato() {
+  estado.pasoActual = 0;
+  estado.inicioMomento = Date.now();
+  renderPaso();
+}
+
+function renderBarraProgreso() {
+  const nombres = { M1:"Perfil", M2:"Conocimientos", M3:"Casos Prácticos", P3:"Informe Técnico" };
+  let html = '<div class="pasos-bar">';
+  estado.pasos.forEach((p, idx) => {
+    let cls = idx < estado.pasoActual ? "completado" : idx === estado.pasoActual ? "activo" : "";
+    html += `<div class="paso-item ${cls}">
+      <div class="p-label">P2-${p === "P3" ? "" : ""}${nombres[p]}</div>
+      <div class="p-barra"></div>
+      ${estado.tiempos[p] ? `<div class="tiempo-badge">${formatMin(estado.tiempos[p])}</div>` : ""}
+    </div>`;
+  });
+  html += '</div>';
+  return html;
+}
+
+function renderPaso() {
+  const main = document.getElementById("main-content");
+  const paso = estado.pasos[estado.pasoActual];
+
+  if (paso === "P3") { renderP3(); return; }
+
+  // M1, M2, M3
+  const preguntas = estado.preguntas.filter(p => p.momento === paso);
+  const titulos = { M1:"Perfil Profesional y Desarrollo Continuo", M2:"Conocimientos Técnicos", M3:"Casos Prácticos y Toma de Decisiones" };
+
+  let html = renderBarraProgreso();
+  html += `<div class="card">
+    <div class="card-header"><h2>${titulos[paso]}</h2><span class="card-badge">${paso}</span></div>
+    <div class="card-body">`;
+
+  if (paso === "M3") {
+    html += `<div class="pregunta-item"><div class="contexto">
+      <strong>📋 Contexto del escenario:</strong><br><br>
+      Es lunes 7:00 a.m. y recibe los siguientes reportes simultáneos:<br>
+      • Un docente no puede acceder a Google Classroom<br>
+      • Coordinación académica no puede ingresar al sistema escolar<br>
+      • 5 computadores de un aula no encienden<br>
+      • Rectoría solicita apoyo urgente en 30 minutos<br>
+      • Hay 12 tickets pendientes del viernes
+    </div></div>`;
+  }
+
+  preguntas.forEach((p, idx) => {
+    const scTags = [p.sc1, p.sc2].filter(s=>s).map(s=>`<span class="sc-badge">${s}</span>`).join(" ");
+    html += `<div class="pregunta-item">
+      <div class="pregunta-meta">
+        <span class="pregunta-num">${p.codigo}</span>
+        <span class="tipo-badge ${p.tipo.toLowerCase()}">${p.tipo}</span>
+        ${scTags}
+      </div>`;
+
+    if (p.codigo === "P19") {
+      html += `<div class="contexto"><strong>🔎 Caso independiente:</strong><br>
+        Un docente dice que el internet no sirve, pero otros equipos del mismo salón sí tienen conexión y el problema ocurre solo en ciertos momentos.</div>`;
+    }
+
+    html += `<div class="pregunta-texto">${p.texto}</div>`;
+
+    if (p.tipo === "Cerrada") {
+      const opciones = getOpciones(p.codigo);
+      html += `<div class="opciones">`;
+      ["A","B","C","D"].forEach((letra, oi) => {
+        if (opciones[oi]) html += `
+          <label class="opcion-label" id="lbl-${p.codigo}-${letra}">
+            <input type="radio" name="${p.codigo}" value="${letra}" onchange="selOpc('${p.codigo}','${letra}')">
+            <span><strong>${letra}.</strong> ${opciones[oi]}</span>
+          </label>`;
+      });
+      html += `</div>`;
+    } else {
+      html += `<textarea class="resp-abierta" id="ta-${p.codigo}" rows="5" placeholder="Escriba su respuesta aquí..."></textarea>`;
+    }
+    html += `</div>`;
+  });
+
+  const btnLabel = estado.pasoActual < 2
+    ? `Guardar y continuar → ${estado.pasos[estado.pasoActual+1]}`
+    : "Guardar y continuar → Informe Técnico";
+
+  html += `</div></div>
+    <button class="btn-sig" id="btn-sig" onclick="avanzarPaso()">${btnLabel}</button>`;
+
+  main.innerHTML = html;
+  window.scrollTo(0,0);
+}
+
+function selOpc(codigo, letra) {
+  ["A","B","C","D"].forEach(l => {
+    const lbl = document.getElementById(`lbl-${codigo}-${l}`);
+    if (lbl) lbl.classList.remove("sel");
+  });
+  const sel = document.getElementById(`lbl-${codigo}-${letra}`);
+  if (sel) sel.classList.add("sel");
+}
+
+function getOpciones(codigo) {
+  const mapa = {
+    P05: ["El HDD usa memoria flash y el SSD tiene partes mecánicas móviles","El SSD usa memoria flash, es más rápido y silencioso. El HDD tiene partes mecánicas móviles y es más lento","No hay diferencia significativa, solo cambia el fabricante","El HDD es más rápido porque tiene mayor capacidad"],
+    P06: ["DNS traduce nombres de dominio a direcciones IP. DHCP asigna direcciones IP automáticamente a los dispositivos","DNS asigna direcciones IP y DHCP traduce nombres de dominio","Ambos protocolos cumplen la misma función de seguridad","DNS gestiona el ancho de banda y DHCP controla el acceso a internet"],
+    P07: ["Son tres nombres distintos para el mismo dispositivo","El Router conecta redes y gestiona el tráfico hacia internet, el Switch conecta dispositivos dentro de la red, el Access Point permite la conexión inalámbrica","El Switch conecta redes externas, el Router distribuye WiFi y el Access Point filtra el tráfico","El Access Point reemplaza al Router y al Switch en redes modernas"],
+    P08: ["Es una red física independiente que requiere hardware exclusivo","Es una configuración de seguridad exclusiva de los Access Point","Es una segmentación lógica de una red física que permite separar el tráfico sin hardware adicional","Es un protocolo para aumentar la velocidad entre switches"],
+    P09: ["Clase B","Clase C","Clase A","Clase D"],
+    P14: ["Formatear el equipo inmediatamente","Preguntar qué aplicaciones usa, revisar uso de RAM y CPU, verificar estado del disco y descartar malware","Cambiar el equipo por uno nuevo sin diagnóstico","Reiniciar el equipo y esperar que el problema se repita"]
+  };
+  return mapa[codigo] || [];
+}
+
+async function avanzarPaso() {
+  const btn = document.getElementById("btn-sig");
+  btn.disabled = true;
+  const paso = estado.pasos[estado.pasoActual];
+  const preguntas = estado.preguntas.filter(p => p.momento === paso);
+  const segs = Math.round((Date.now() - estado.inicioMomento) / 1000);
+  estado.tiempos[paso] = segs;
+
+  mostrarLoading("Guardando respuestas...");
+  for (const p of preguntas) {
+    let respuesta = "";
+    if (p.tipo === "Cerrada") {
+      const sel = document.querySelector(`input[name="${p.codigo}"]:checked`);
+      respuesta = sel ? sel.value : "Sin respuesta";
+    } else {
+      const ta = document.getElementById(`ta-${p.codigo}`);
+      respuesta = ta ? ta.value.trim() || "Sin respuesta" : "Sin respuesta";
+    }
+    await api({ action:"guardarRespuesta", idCandidato:estado.idCandidato, nombreCandidato:estado.nombre, pregunta:p.codigo, momento:paso, respuesta, tipo:p.tipo, paso:"P2" });
+  }
+  await api({ action:"guardarTiempo", id:estado.idCandidato, momento:paso, tiempo:formatMin(segs) });
+  ocultarLoading();
+
+  estado.pasoActual++;
+  estado.inicioMomento = Date.now();
+  renderPaso();
+}
+
+// ── P3: INFORME TÉCNICO ─────────────────────────────────────
+function renderP3() {
+  const main = document.getElementById("main-content");
+  let html = renderBarraProgreso();
+  html += `<div class="card">
+    <div class="card-header"><h2>Diagnóstico Técnico e Informe</h2><span class="card-badge">P3</span></div>
+    <div class="card-body">
+      <div class="pregunta-item">
+        <div class="p3-ticket">
+          <div class="t-header">🎫 Ticket #TK-2627-0892 &nbsp;|&nbsp; Reportado por: Admisiones &nbsp;|&nbsp; Prioridad: Alta</div>
+          <h3>Computador portátil no enciende</h3>
+          <p>Un equipo portátil que estaba en bodega fue solicitado para uso en el área administrativa, con el fin de que el usuario se pueda llevar su equipo a casa y trabajar con conexión VPN. Al intentar encenderlo el equipo no arranca. Se requiere que el equipo quede completamente funcional y conectado a la red <strong>WiFi Colegio Visitantes</strong> para validar conectividad antes de asignarlo al usuario.</p>
+          <br>
+          <p><strong>Datos de Administrador del computador a reparar:</strong><br>
+          Usuario: <code style="background:#f0f4fa;padding:2px 6px;border-radius:4px">Administrator</code><br>
+          Clave: <code style="background:#f0f4fa;padding:2px 6px;border-radius:4px">tilata@2026</code></p>
+        </div>
+
+        <div class="p3-instrucciones">
+          <strong>Su tarea:</strong><br>
+          1. Diagnosticar y resolver todas las fallas que encuentre hasta dejar el equipo funcional.<br>
+          2. Conectar el equipo a la red <strong>WiFi Colegio Visitantes</strong>. Esta clave es la misma que tiene el equipo actual con el que está presentando la prueba. De allí la puede tomar.<br>
+          3. Construir un informe técnico libre, preferiblemente en formato PDF con:<br>
+          &nbsp;&nbsp;&nbsp;• Datos del equipo: Marca – Modelo – Serial – Procesador – Memoria RAM instalada<br>
+          &nbsp;&nbsp;&nbsp;• Fallas encontradas y procedimiento aplicado para cada una<br>
+          &nbsp;&nbsp;&nbsp;• Datos de conexión: IP, puerta de enlace, DNS<br>
+          &nbsp;&nbsp;&nbsp;• Análisis de velocidad de conexión<br>
+          &nbsp;&nbsp;&nbsp;• Conclusiones y recomendaciones<br>
+          4. Subir el informe usando el botón verde con la siguiente estructura: <strong>InformeTecnico_NombreApellido</strong>
+        </div>
+
+        <a href="https://docs.google.com/forms/d/e/1FAIpQLSeqk2wy9MDX4lVqfM2VkZMi8OkkmEh5VJ0GEZlFBfP0zY_WVQ/viewform" target="_blank" class="carpeta-btn">
+          📤 Abrir formulario para subir el informe técnico
+        </a>
+
+        <label class="confirm-check" id="label-confirm">
+          <input type="checkbox" id="chk-subido" onchange="toggleConfirm()">
+          <span>Confirmo que ya subí mi informe técnico a la carpeta de Drive</span>
+        </label>
+      </div>
+    </div>
+  </div>
+  <button class="btn-sig" id="btn-finalizar" onclick="finalizarP3()" disabled>
+    Finalizar evaluación
+  </button>`;
+
+  main.innerHTML = html;
+  window.scrollTo(0,0);
+}
+
+function toggleConfirm() {
+  const chk = document.getElementById("chk-subido");
+  const btn = document.getElementById("btn-finalizar");
+  btn.disabled = !chk.checked;
+}
+
+async function finalizarP3() {
+  const segs = Math.round((Date.now() - estado.inicioMomento) / 1000);
+  estado.tiempos.P3 = segs;
+
+  mostrarLoading("Finalizando evaluación...");
+  await api({ action:"guardarRespuesta", idCandidato:estado.idCandidato, nombreCandidato:estado.nombre, pregunta:"P3-INFORME", momento:"P3", respuesta:"Candidato confirmó subida del informe a Drive", tipo:"Informe", paso:"P3" });
+  await api({ action:"guardarTiempo", id:estado.idCandidato, momento:"P3", tiempo:formatMin(segs) });
+  ocultarLoading();
+  renderFinalCandidato();
+}
+
+function renderFinalCandidato() {
+  const main = document.getElementById("main-content");
+  main.innerHTML = `
+    <div class="pantalla-final">
+      <div class="check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+      <h2>Evaluación completada</h2>
+      <p style="margin-bottom:28px">Ha completado exitosamente todos los pasos de la evaluación.</p>
+      <div style="display:flex;flex-direction:column;gap:10px;max-width:360px;margin:0 auto 28px">
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:#e8f9ef;border-radius:8px;border:1px solid #a7e3c0">
+          <span style="color:var(--ok);font-size:20px">✓</span>
+          <span style="font-weight:500">M1 — Perfil Profesional</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:#e8f9ef;border-radius:8px;border:1px solid #a7e3c0">
+          <span style="color:var(--ok);font-size:20px">✓</span>
+          <span style="font-weight:500">M2 — Conocimientos Técnicos</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:#e8f9ef;border-radius:8px;border:1px solid #a7e3c0">
+          <span style="color:var(--ok);font-size:20px">✓</span>
+          <span style="font-weight:500">M3 — Casos Prácticos</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:#e8f9ef;border-radius:8px;border:1px solid #a7e3c0">
+          <span style="color:var(--ok);font-size:20px">✓</span>
+          <span style="font-weight:500">P3 — Informe Técnico</span>
+        </div>
+      </div>
+      <div style="background:#fff8e1;border:1px solid #fcd34d;border-radius:8px;padding:14px 20px;font-size:15px;color:#92400e;font-weight:500">
+        📢 Por favor informe al entrevistador que ha finalizado.
+      </div>
+    </div>`;
+}
+
+// ══════════════════════════════════════════════════════════
+// VISTA ENTREVISTADOR
+// ══════════════════════════════════════════════════════════
+let candidatosCargados = [];
+
+function renderEntrevistador(candidatos) {
+  if (candidatos) candidatosCargados = candidatos;
+  const main = document.getElementById("main-content");
+  main.innerHTML = `
+    <div class="tabs">
+      <button class="tab-btn activo" onclick="switchTab('p1',this)">P1 — Entrevista</button>
+      <button class="tab-btn" onclick="switchTab('p2',this)">P2 — Calificar</button>
+      <button class="tab-btn" onclick="switchTab('p3',this)">P3 — Informe</button>
+      <button class="tab-btn" onclick="switchTab('p4',this)">P4 — Exposición</button>
+      <button class="tab-btn" onclick="switchTab('resultados',this)">Resultados</button>
+      <button class="tab-btn" onclick="switchTab('candidatos',this)">Candidatos</button>
+    </div>
+    <div class="tab-content activo" id="tab-p1"><div id="zona-p1"></div></div>
+    <div class="tab-content" id="tab-p2"><div id="zona-p2"></div></div>
+    <div class="tab-content" id="tab-p3"><div id="zona-p3"></div></div>
+    <div class="tab-content" id="tab-p4"><div id="zona-p4"></div></div>
+    <div class="tab-content" id="tab-resultados"><div id="zona-resultados"></div></div>
+    <div class="tab-content" id="tab-candidatos"><div id="zona-candidatos"></div></div>`;
+
+  cargarCandidatosEntrevistador();
+  renderTabP1();
+  renderTabCandidatos();
+}
+
+function switchTab(tab, btn) {
+  document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("activo"));
+  document.querySelectorAll(".tab-content").forEach(t => t.classList.remove("activo"));
+  btn.classList.add("activo");
+  document.getElementById(`tab-${tab}`).classList.add("activo");
+}
+
+async function cargarCandidatosEntrevistador() {
+  if (candidatosCargados.length === 0) {
+    const res = await api({ action:"getCandidatos" });
+    if (res.ok) candidatosCargados = res.candidatos;
+  }
+  const selects = ["sel-p1","sel-p2","sel-p3","sel-p4","sel-res"];
+  selects.forEach(id => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    sel.innerHTML = '<option value="">— Seleccione candidato —</option>';
+    candidatosCargados.forEach(c => {
+      const opt = document.createElement("option");
+      opt.value = c.id;
+      opt.textContent = c.nombre + (c.estado ? ` (${c.estado})` : "");
+      sel.appendChild(opt);
+    });
+  });
+}
+
+// ── TAB P1 ──────────────────────────────────────────────────
+async function renderTabP1() {
+  const zona = document.getElementById("zona-p1");
+  mostrarLoading("Cargando preguntas P1...");
+  const res = await api({ action:"getPreguntasP1" });
+  ocultarLoading();
+
+  let html = `
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-header"><h2>Entrevista con líderes de área</h2><span class="card-badge">P1 · 10%</span></div>
+      <div class="card-body">`;
+
+  if (res.ok) {
+    res.preguntas.forEach(p => {
+      html += `<div class="p1-pregunta">
+        <div class="p1-num">Pregunta ${p.numero}</div>
+        <div style="margin-bottom:8px">${p.texto}</div>
+        <input class="obs-inp" id="obs-p1-${p.numero}" placeholder="Observación de esta pregunta (opcional)" style="width:100%;margin-top:4px">
+      </div>`;
+    });
+  }
+  html += `</div></div>
+
+  <div class="card">
+    <div class="card-header"><h2>Calificación P1</h2><span class="card-badge">1 — 10</span></div>
+    <div class="card-body">
+      <div class="pregunta-item">
+        <select class="sel-candidato" id="sel-p1" onchange="void(0)"></select>
+        <div id="card-P1_GLOBAL" data-calificacion="">
+          <div class="calif-row">
+            <label>Calificación global de la entrevista:</label>
+            <div class="nums-calif" id="nums-P1_GLOBAL">
+              ${numsBtns("P1-GLOBAL","P1_GLOBAL")}
+            </div>
+          </div>
+          <div class="calif-row" style="margin-top:10px">
+            <input class="obs-inp" id="obs-P1_GLOBAL" placeholder="Observación general de la entrevista P1..." style="width:100%">
+          </div>
+          <button class="btn-guardar-c" style="margin-top:12px" onclick="guardarCalifP1()">Guardar calificación P1</button>
+          <div id="badge-P1"></div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+
+  zona.innerHTML = html;
+  cargarCandidatosEntrevistador();
+}
+
+async function guardarCalifP1() {
+  const idCandidato = document.getElementById("sel-p1").value;
+  if (!idCandidato) { mostrarToast("Seleccione un candidato", "err"); return; }
+  const card = document.getElementById("card-P1_GLOBAL");
+  const calif = card.dataset.calificacion;
+  if (!calif) { mostrarToast("Seleccione una calificación 1-10", "err"); return; }
+  const obsGeneral = document.getElementById("obs-P1_GLOBAL").value;
+  const nombreCandidato = document.getElementById("sel-p1").options[document.getElementById("sel-p1").selectedIndex].text;
+
+  // Recopilar observaciones por pregunta
+  let obsPreguntas = "";
+  for (let i = 1; i <= 11; i++) {
+    const obs = document.getElementById("obs-p1-" + i);
+    if (obs && obs.value.trim()) {
+      obsPreguntas += "P" + i + ": " + obs.value.trim() + " | ";
+    }
+  }
+  const observaciones = (obsPreguntas + obsGeneral).trim();
+
+  mostrarLoading("Guardando...");
+  const res = await api({ action:"calificar", idCandidato, nombreCandidato, paso:"P1", pregunta:"P1-ENTREVISTA", respuesta:"Entrevista presencial con líderes de área", subcompetencias:"", calificacion:calif, observaciones });
+  ocultarLoading();
+  if (res.ok) {
+    document.getElementById("badge-P1").innerHTML = '<div style="color:var(--ok);font-weight:600;margin-top:8px">✓ Guardado</div>';
+    mostrarToast("Calificación P1 guardada", "ok");
+  }
+}
+
+// ── TAB P2 ──────────────────────────────────────────────────
+async function cargarRespuestasP2() {
+  const idCandidato = document.getElementById("sel-p2").value;
+  if (!idCandidato) return;
+  mostrarLoading("Cargando respuestas...");
+  const res = await api({ action:"getCalificaciones", idCandidato });
+  ocultarLoading();
+
+  const zona = document.getElementById("zona-p2-resp");
+  const abiertas = (res.respuestas || []).filter(r => r.tipo === "Abierta" && r.paso === "P2");
+
+  if (!abiertas.length) {
+    zona.innerHTML = `<p style="color:var(--gris2);text-align:center;padding:24px">No hay respuestas abiertas P2 registradas.</p>`;
+    return;
+  }
+
+  let html = "";
+  abiertas.forEach(r => {
+    const pregObj = estado.preguntas.find(p => p.codigo === r.pregunta) || {};
+    const scs = [pregObj.sc1, pregObj.sc2].filter(Boolean).join(", ");
+    const safeId = r.pregunta.replace(/[^a-zA-Z0-9]/g,"_");
+    html += `
+      <div class="resp-card" id="card-${safeId}">
+        <div class="pregunta-meta">
+          <span class="pregunta-num">${r.pregunta}</span>
+          <span class="tipo-badge abierta">${r.momento}</span>
+          ${scs ? `<span class="sc-badge">${scs}</span>` : ""}
+        </div>
+        <div class="rc-pregunta">${pregObj.texto || r.pregunta}</div>
+        <div class="rc-respuesta">${r.respuesta}</div>
+        <div class="calif-row">
+          <label>Calificación (1-10):</label>
+          <div class="nums-calif" id="nums-${safeId}">${numsBtns(r.pregunta, safeId)}</div>
+          <input class="obs-inp" id="obs-${safeId}" placeholder="Observación opcional">
+          <button class="btn-guardar-c" onclick="guardarCalifP2('${r.pregunta}','${idCandidato}','${scs}')">Guardar</button>
+        </div>
+      </div>`;
+  });
+  zona.innerHTML = html;
+}
+
+async function guardarCalifP2(pregunta, idCandidato, scs) {
+  const safeId = pregunta.replace(/[^a-zA-Z0-9]/g,"_");
+  const card = document.getElementById(`card-${safeId}`);
+  const calif = card.dataset.calificacion;
+  if (!calif) { mostrarToast("Seleccione una calificación", "err"); return; }
+  const obs = document.getElementById(`obs-${safeId}`).value;
+  const nombreCandidato = document.getElementById("sel-p2").options[document.getElementById("sel-p2").selectedIndex].text;
+
+  mostrarLoading("Guardando...");
+  const res = await api({ action:"calificar", idCandidato, nombreCandidato, paso:"P2", pregunta, respuesta:"", subcompetencias:scs, calificacion:calif, observaciones:obs });
+  ocultarLoading();
+  if (res.ok) {
+    const btn = card.querySelector(".btn-guardar-c");
+    btn.textContent = "✓ Guardado"; btn.classList.add("guardado");
+    mostrarToast("Guardado", "ok");
+  }
+}
+
+// ── TAB P3 ──────────────────────────────────────────────────
+async function cargarP3() {
+  const idCandidato = document.getElementById("sel-p3").value;
+  if (!idCandidato) return;
+  mostrarLoading("Cargando...");
+  const [candRes, califRes] = await Promise.all([
+    api({ action:"getCandidato", id:idCandidato }),
+    api({ action:"getCandidatos" })
+  ]);
+  ocultarLoading();
+
+  const zona = document.getElementById("zona-p3-calif");
+  const candidatos = califRes.candidatos || [];
+  const cand = candidatos.find(c => String(c.id) === String(idCandidato));
+  const carpeta = cand ? cand.carpeta : "";
+
+  const safeId = "P3_INFORME";
+  zona.innerHTML = `
+    <div class="resp-card" id="card-${safeId}">
+      <div class="rc-pregunta">Informe técnico — Carpeta Drive del candidato</div>
+      ${carpeta ? `<a href="${carpeta}" target="_blank" class="carpeta-btn" style="margin-bottom:12px">📁 Abrir carpeta Drive del candidato</a>` :
+        `<p style="color:var(--gris2);font-size:13px;margin-bottom:12px">⚠ Carpeta Drive no registrada para este candidato.</p>`}
+      <div class="calif-row">
+        <label>Calificación informe (1-10):</label>
+        <div class="nums-calif" id="nums-${safeId}">${numsBtns("P3-INFORME", safeId)}</div>
+        <input class="obs-inp" id="obs-${safeId}" placeholder="Observaciones del informe">
+        <button class="btn-guardar-c" onclick="guardarCalifPaso('P3','P3-INFORME','${idCandidato}','${safeId}')">Guardar</button>
+      </div>
+    </div>`;
+}
+
+// ── TAB P4 ──────────────────────────────────────────────────
+function renderZonaP4() {
+  const idCandidato = document.getElementById("sel-p4").value;
+  if (!idCandidato) return;
+  const nombreCandidato = document.getElementById("sel-p4").options[document.getElementById("sel-p4").selectedIndex].text;
+  const safeId = "P4_EXPOSICION";
+  document.getElementById("zona-p4-calif").innerHTML = `
+    <div class="resp-card" id="card-${safeId}">
+      <div class="rc-pregunta">Exposición del informe técnico — ${nombreCandidato}</div>
+      <p style="font-size:13px;color:var(--gris2);margin-bottom:14px">Evalúe la calidad de la exposición: claridad, dominio técnico, capacidad de argumentar y responder preguntas.</p>
+      <div class="calif-row">
+        <label>Calificación exposición (1-10):</label>
+        <div class="nums-calif" id="nums-${safeId}">${numsBtns("P4-EXPOSICION",safeId)}</div>
+        <input class="obs-inp" id="obs-${safeId}" placeholder="Observaciones de la exposición">
+        <button class="btn-guardar-c" onclick="guardarCalifPaso('P4','P4-EXPOSICION','${idCandidato}','${safeId}')">Guardar</button>
+      </div>
+    </div>`;
+}
+
+async function guardarCalifPaso(paso, pregunta, idCandidato, safeId) {
+  const card = document.getElementById(`card-${safeId}`);
+  const calif = card.dataset.calificacion;
+  if (!calif) { mostrarToast("Seleccione una calificación", "err"); return; }
+  const obs = document.getElementById(`obs-${safeId}`).value;
+  const selId = paso === "P3" ? "sel-p3" : "sel-p4";
+  const nombreCandidato = document.getElementById(selId).options[document.getElementById(selId).selectedIndex].text;
+
+  mostrarLoading("Guardando...");
+  const res = await api({ action:"calificar", idCandidato, nombreCandidato, paso, pregunta, respuesta:"", subcompetencias:"", calificacion:calif, observaciones:obs });
+  ocultarLoading();
+  if (res.ok) {
+    const btn = card.querySelector(".btn-guardar-c");
+    btn.textContent = "✓ Guardado"; btn.classList.add("guardado");
+    mostrarToast(`Calificación ${paso} guardada`, "ok");
+  }
+}
+
+// ── TAB RESULTADOS ───────────────────────────────────────────
+async function cargarResultados() {
+  const idCandidato = document.getElementById("sel-res").value;
+  if (!idCandidato) return;
+  const nombreCandidato = document.getElementById("sel-res").options[document.getElementById("sel-res").selectedIndex].text;
+
+  mostrarLoading("Calculando resultados...");
+  const res = await api({ action:"calcularResultados", idCandidato });
+  ocultarLoading();
+
+  const zona = document.getElementById("zona-resultados-data");
+  if (!res.ok) { zona.innerHTML = `<p style="color:var(--error)">Error al calcular.</p>`; return; }
+
+  const r = res.resultados;
+  const final = r.final;
+  const escala = final === null ? null : final >= 9 ? {label:"Excelente",color:"var(--ok)"} : final >= 7.5 ? {label:"Bueno",color:"var(--azul2)"} : final >= 6 ? {label:"Aceptable",color:"var(--acento)"} : {label:"No recomendado",color:"var(--error)"};
+
+  const val = v => v !== null ? `${v}` : "Pendiente";
+  const barColor = v => v === null ? "var(--gris1)" : v >= 7.5 ? "var(--ok)" : v >= 6 ? "var(--acento)" : "var(--error)";
+  const barW = v => v === null ? 0 : (v/10)*100;
+
+  zona.innerHTML = `
+    <div class="resultado-card">
+      <div class="resultado-header">
+        <h3>${nombreCandidato}</h3>
+        <div style="text-align:right">
+          <div class="puntaje-final">${final !== null ? final : "--"}</div>
+          ${escala ? `<div style="font-size:12px;color:${escala.color};font-weight:600">${escala.label}</div>` : ""}
+        </div>
+      </div>
+      <div class="pasos-grid">
+        <div class="paso-res">
+          <div class="pr-label">P1 — Entrevista (10%)</div>
+          <div class="pr-val" style="color:${barColor(r.P1)}">${val(r.P1)}</div>
+          <div class="pr-barra-wrap"><div class="pr-barra" style="width:${barW(r.P1)}%;background:${barColor(r.P1)}"></div></div>
+        </div>
+        <div class="paso-res">
+          <div class="pr-label">P2 — Prueba técnica (40%)</div>
+          <div class="pr-val" style="color:${barColor(r.P2)}">${val(r.P2)}</div>
+          <div class="pr-barra-wrap"><div class="pr-barra" style="width:${barW(r.P2)}%;background:${barColor(r.P2)}"></div></div>
+          <div style="font-size:11px;color:var(--gris2);margin-top:6px">M1:${val(r.M1)} · M2:${val(r.M2)} · M3:${val(r.M3)}</div>
+        </div>
+        <div class="paso-res">
+          <div class="pr-label">P3 — Informe (25%)</div>
+          <div class="pr-val" style="color:${barColor(r.P3)}">${val(r.P3)}</div>
+          <div class="pr-barra-wrap"><div class="pr-barra" style="width:${barW(r.P3)}%;background:${barColor(r.P3)}"></div></div>
+        </div>
+        <div class="paso-res">
+          <div class="pr-label">P4 — Exposición (25%)</div>
+          <div class="pr-val" style="color:${barColor(r.P4)}">${val(r.P4)}</div>
+          <div class="pr-barra-wrap"><div class="pr-barra" style="width:${barW(r.P4)}%;background:${barColor(r.P4)}"></div></div>
+        </div>
+      </div>
+      <div style="padding:14px 20px;border-top:1px solid var(--gris1);display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:13px;color:var(--gris2)">Los pasos "Pendiente" tienen calificaciones sin registrar.</span>
+        <button onclick="cargarResultados()" class="btn-accion" style="padding:7px 14px;font-size:13px">Recalcular</button>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <div class="card-header"><h2>Escala de referencia</h2><span class="card-badge">Base 10</span></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:16px">
+        ${[["9.0 - 10.0","Excelente","var(--ok)"],["7.5 - 8.9","Bueno","var(--azul2)"],["6.0 - 7.4","Aceptable","var(--acento)"],["< 6.0","No recomendado","var(--error)"]].map(([r,e,c])=>`
+          <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--fondo);border-radius:6px">
+            <div style="width:10px;height:10px;border-radius:50%;background:${c}"></div>
+            <span style="font-size:13px"><strong>${r}</strong> — ${e}</span>
+          </div>`).join("")}
+      </div>
+    </div>`;
+}
+
+// ── TAB CANDIDATOS ───────────────────────────────────────────
+function renderTabCandidatos() {
+  const zona = document.getElementById("zona-candidatos");
+  zona.innerHTML = `
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-header"><h2>Registrar nuevo candidato</h2><span class="card-badge">Drive automático</span></div>
+      <div class="card-body">
+        <div class="pregunta-item">
+          <div class="form-campo"><label>Nombre completo</label><input type="text" id="reg-nombre" placeholder="Ej: Luis Felipe Murcia"></div>
+          <div class="form-campo"><label>Usuario</label><input type="text" id="reg-usuario" placeholder="Ej: lmurcia"></div>
+          <div class="form-campo"><label>Fecha entrevista</label><input type="date" id="reg-fecha"></div>
+          <button class="btn-accion verde" onclick="registrarCandidato()">Registrar candidato</button>
+          <div id="reg-resultado" style="margin-top:12px"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><h2>Candidatos registrados</h2></div>
+      <div class="card-body">
+        <div class="pregunta-item">
+          <button class="btn-accion" onclick="listarCandidatos()">Actualizar lista</button>
+          <div id="lista-candidatos" style="margin-top:16px"></div>
+        </div>
+      </div>
+    </div>`;
+
+  listarCandidatos();
+}
+
+async function registrarCandidato() {
+  const nombre  = document.getElementById("reg-nombre").value.trim();
+  const usuario = document.getElementById("reg-usuario").value.trim();
+  const fecha   = document.getElementById("reg-fecha").value;
+  if (!nombre || !usuario) { mostrarToast("Complete nombre y usuario", "err"); return; }
+
+  mostrarLoading("Registrando candidato...");
+  const res = await api({ action:"registrarCandidato", nombre, usuario, fecha, cargo:"Analista de Soporte TI" });
+  ocultarLoading();
+
+  const div = document.getElementById("reg-resultado");
+  if (res.ok) {
+    div.innerHTML = `
+      <div style="background:#e8f9ef;border:1px solid #a7e3c0;border-radius:8px;padding:14px 16px;font-size:14px">
+        <strong>✓ Candidato registrado</strong><br>
+        Usuario: <strong>${usuario}</strong> &nbsp;|&nbsp; Contraseña: <strong>TI-2627-${String(1000 + res.id - 1).padStart(4,'0')}</strong>
+      </div>`;
+    cargarCandidatosEntrevistador();
+    listarCandidatos();
+  } else {
+    div.innerHTML = `<div style="color:var(--error);font-size:13px">Error: ${res.error}</div>`;
+  }
+}
+
+async function listarCandidatos() {
+  const res = await api({ action:"getCandidatos" });
+  const div = document.getElementById("lista-candidatos");
+  if (!res.ok || !res.candidatos.length) {
+    div.innerHTML = `<p style="color:var(--gris2);font-size:14px">No hay candidatos registrados.</p>`;
+    return;
+  }
+  let html = '<table style="width:100%;border-collapse:collapse;font-size:13px">';
+  html += '<tr style="background:var(--azul);color:white"><th style="padding:8px 12px;text-align:left">Nombre</th><th>Usuario</th><th>Estado</th></tr>';
+  res.candidatos.forEach((c,i) => {
+    const bg = i%2===0?"var(--fondo)":"var(--blanco)";
+    html += `<tr style="background:${bg}">
+      <td style="padding:8px 12px">${c.nombre}</td>
+      <td style="padding:8px 12px;font-family:'DM Mono',monospace">${c.usuario}</td>
+      <td style="padding:8px 12px"><span style="padding:3px 8px;border-radius:4px;font-size:11px;font-weight:600;background:${c.estado==='Completado'?'#dcfce7':'#fef3c7'};color:${c.estado==='Completado'?'var(--ok)':'#b45309'}">${c.estado}</span></td>
+    </tr>`;
+  });
+  html += '</table>';
+  div.innerHTML = html;
+}
+
+// ── RENDER TABS CON SELECTORES ───────────────────────────────
+document.addEventListener("DOMContentLoaded", () => {});
+
+// Inyectar selectores en tabs cuando se activan
+const tabInit = {
+  p2: () => {
+    const zona = document.getElementById("zona-p2");
+    if (zona.querySelector(".sel-candidato")) return;
+    zona.innerHTML = `
+      <select class="sel-candidato" id="sel-p2" onchange="cargarRespuestasP2()">
+        <option value="">— Seleccione candidato —</option>
+      </select>
+      <div id="zona-p2-resp"></div>`;
+    cargarCandidatosEntrevistador();
+  },
+  p3: () => {
+    const zona = document.getElementById("zona-p3");
+    if (zona.querySelector(".sel-candidato")) return;
+    zona.innerHTML = `
+      <select class="sel-candidato" id="sel-p3" onchange="cargarP3()">
+        <option value="">— Seleccione candidato —</option>
+      </select>
+      <div id="zona-p3-calif"></div>`;
+    cargarCandidatosEntrevistador();
+  },
+  p4: () => {
+    const zona = document.getElementById("zona-p4");
+    if (zona.querySelector(".sel-candidato")) return;
+    zona.innerHTML = `
+      <select class="sel-candidato" id="sel-p4" onchange="renderZonaP4()">
+        <option value="">— Seleccione candidato —</option>
+      </select>
+      <div id="zona-p4-calif"></div>`;
+    cargarCandidatosEntrevistador();
+  },
+  resultados: () => {
+    const zona = document.getElementById("zona-resultados");
+    if (zona.querySelector(".sel-candidato")) return;
+    zona.innerHTML = `
+      <select class="sel-candidato" id="sel-res" onchange="cargarResultados()">
+        <option value="">— Seleccione candidato —</option>
+      </select>
+      <div id="zona-resultados-data"></div>`;
+    cargarCandidatosEntrevistador();
+  }
+};
+
+const origSwitchTab = window.switchTab;
+window.switchTab = function(tab, btn) {
+  document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("activo"));
+  document.querySelectorAll(".tab-content").forEach(t => t.classList.remove("activo"));
+  btn.classList.add("activo");
+  document.getElementById(`tab-${tab}`).classList.add("activo");
+  if (tabInit[tab]) tabInit[tab]();
+};
+</script>
+</body>
+</html>
