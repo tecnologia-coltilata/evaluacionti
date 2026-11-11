@@ -275,7 +275,7 @@ async function apiSeguro(params, intentos = 3, timeoutMs = 30000) {
   }
   throw ultimoError;
 }
-  
+
 function formatMin(seg) {
   if (!seg) return "--";
   const m = Math.floor(seg/60), s = seg%60;
@@ -513,6 +513,32 @@ async function avanzarPaso() {
 }
 
 async function avanzarPasoViejo() {
+  const btn = document.getElementById("btn-sig");
+  btn.disabled = true;
+  const paso = estado.pasos[estado.pasoActual];
+  const preguntas = estado.preguntas.filter(p => p.momento === paso);
+  const segs = Math.round((Date.now() - estado.inicioMomento) / 1000);
+  estado.tiempos[paso] = segs;
+
+  mostrarLoading("Guardando respuestas...");
+  for (const p of preguntas) {
+    let respuesta = "";
+    if (p.tipo === "Cerrada") {
+      const sel = document.querySelector(`input[name="${p.codigo}"]:checked`);
+      respuesta = sel ? sel.value : "Sin respuesta";
+    } else {
+      const ta = document.getElementById(`ta-${p.codigo}`);
+      respuesta = ta ? ta.value.trim() || "Sin respuesta" : "Sin respuesta";
+    }
+    await api({ action:"guardarRespuesta", idCandidato:estado.idCandidato, nombreCandidato:estado.nombre, pregunta:p.codigo, momento:paso, respuesta, tipo:p.tipo, paso:"P2" });
+  }
+  await api({ action:"guardarTiempo", id:estado.idCandidato, momento:paso, tiempo:formatMin(segs) });
+  ocultarLoading();
+
+  estado.pasoActual++;
+  estado.inicioMomento = Date.now();
+  renderPaso();
+}
 
 // ── P3: INFORME TÉCNICO ─────────────────────────────────────
 function renderP3() {
