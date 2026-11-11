@@ -258,6 +258,24 @@ async function api(params) {
   return r.json();
 }
 
+async function apiSeguro(params, intentos = 3, timeoutMs = 30000) {
+  let ultimoError = new Error("Sin respuesta");
+  for (let i = 1; i <= intentos; i++) {
+    try {
+      const j = await Promise.race([
+        api(params),
+        new Promise((_, rej) => setTimeout(() => rej(new Error("Tiempo de espera agotado")), timeoutMs))
+      ]);
+      if (j && j.ok) return j;
+      ultimoError = new Error((j && j.error) || "Respuesta inválida");
+    } catch (e) {
+      ultimoError = e;
+    }
+    if (i < intentos) await new Promise(res => setTimeout(res, 1500 * i));
+  }
+  throw ultimoError;
+}
+  
 function formatMin(seg) {
   if (!seg) return "--";
   const m = Math.floor(seg/60), s = seg%60;
@@ -456,10 +474,8 @@ async function avanzarPaso() {
   const paso = estado.pasos[estado.pasoActual];
   const preguntas = estado.preguntas.filter(p => p.momento === paso);
   const segs = Math.round((Date.now() - estado.inicioMomento) / 1000);
-  estado.tiempos[paso] = segs;
 
-  mostrarLoading("Guardando respuestas...");
-  for (const p of preguntas) {
+  const items = preguntas.map(p => {
     let respuesta = "";
     if (p.tipo === "Cerrada") {
       const sel = document.querySelector(`input[name="${p.codigo}"]:checked`);
@@ -468,15 +484,35 @@ async function avanzarPaso() {
       const ta = document.getElementById(`ta-${p.codigo}`);
       respuesta = ta ? ta.value.trim() || "Sin respuesta" : "Sin respuesta";
     }
-    await api({ action:"guardarRespuesta", idCandidato:estado.idCandidato, nombreCandidato:estado.nombre, pregunta:p.codigo, momento:paso, respuesta, tipo:p.tipo, paso:"P2" });
+    return { pregunta: p.codigo, respuesta, tipo: p.tipo };
+  });
+
+  mostrarLoading("Guardando respuestas...");
+  try {
+    await apiSeguro({
+      action: "guardarMomento",
+      idCandidato: estado.idCandidato,
+      nombreCandidato: estado.nombre,
+      momento: paso,
+      paso: "P2",
+      tiempo: formatMin(segs),
+      respuestas: JSON.stringify(items)
+    });
+  } catch (e) {
+    ocultarLoading();
+    btn.disabled = false;
+    alert("No se pudo guardar. Tus respuestas siguen en pantalla. Espera unos segundos y pulsa de nuevo 'Guardar y continuar'.");
+    return;
   }
-  await api({ action:"guardarTiempo", id:estado.idCandidato, momento:paso, tiempo:formatMin(segs) });
   ocultarLoading();
 
+  estado.tiempos[paso] = segs;
   estado.pasoActual++;
   estado.inicioMomento = Date.now();
   renderPaso();
 }
+
+async function avanzarPasoViejo() {
 
 // ── P3: INFORME TÉCNICO ─────────────────────────────────────
 function renderP3() {
