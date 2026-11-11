@@ -277,6 +277,14 @@ async function apiSeguro(params, intentos = 3, timeoutMs = 30000) {
   throw ultimoError;
 }
 
+async function apiOk(params) {
+  try {
+    return await apiSeguro(params);
+  } catch (e) {
+    return { ok: false, error: String((e && e.message) || e) };
+  }
+}
+
 function claveBorrador(paso) { return "evalti_borrador_" + estado.idCandidato + "_" + paso; }
 function claveInicio(paso) { return "evalti_inicio_" + estado.idCandidato + "_" + paso; }
 
@@ -392,9 +400,13 @@ async function iniciarApp() {
   if (estado.rol === "entrevistador") rolEl.classList.add("entrevistador");
 
   mostrarLoading("Cargando sistema...");
-  const res = await api({ action:"getDatosIniciales" });
+  const res = await apiOk({ action:"getDatosIniciales" });
   ocultarLoading();
 
+  if (!res.ok) {
+    alert("No se pudo cargar el sistema. Recarga la página e intenta de nuevo.");
+    return;
+  }
   if (res.ok) {
     estado.preguntas = res.preguntas || [];
     if (estado.rol === "candidato") {
@@ -769,8 +781,9 @@ function switchTab(tab, btn) {
 
 async function cargarCandidatosEntrevistador() {
   if (candidatosCargados.length === 0) {
-    const res = await api({ action:"getCandidatos" });
+    const res = await apiOk({ action:"getCandidatos" });
     if (res.ok) candidatosCargados = res.candidatos;
+    else mostrarToast("No se pudo cargar la lista de candidatos. Intente de nuevo.", "err");
   }
   const selects = ["sel-p1","sel-p2","sel-p3","sel-p4","sel-res"];
   selects.forEach(id => {
@@ -790,8 +803,9 @@ async function cargarCandidatosEntrevistador() {
 async function renderTabP1() {
   const zona = document.getElementById("zona-p1");
   mostrarLoading("Cargando preguntas P1...");
-  const res = await api({ action:"getPreguntasP1" });
+  const res = await apiOk({ action:"getPreguntasP1" });
   ocultarLoading();
+  if (!res.ok) { mostrarToast("No se pudieron cargar las preguntas P1. Intente de nuevo.", "err"); return; }
 
   let html = `
     <div class="card" style="margin-bottom:20px">
@@ -855,11 +869,13 @@ async function guardarCalifP1() {
   const observaciones = (obsPreguntas + obsGeneral).trim();
 
   mostrarLoading("Guardando...");
-  const res = await api({ action:"calificar", idCandidato, nombreCandidato, paso:"P1", pregunta:"P1-ENTREVISTA", respuesta:"Entrevista presencial con líderes de área", subcompetencias:"", calificacion:calif, observaciones });
+  const res = await apiOk({ action:"calificar", idCandidato, nombreCandidato, paso:"P1", pregunta:"P1-ENTREVISTA", respuesta:"Entrevista presencial con líderes de área", subcompetencias:"", calificacion:calif, observaciones });
   ocultarLoading();
   if (res.ok) {
     document.getElementById("badge-P1").innerHTML = '<div style="color:var(--ok);font-weight:600;margin-top:8px">✓ Guardado</div>';
     mostrarToast("Calificación P1 guardada", "ok");
+  } else {
+    mostrarToast("No se pudo guardar la calificación. Intente de nuevo.", "err");
   }
 }
 
@@ -868,8 +884,9 @@ async function cargarRespuestasP2() {
   const idCandidato = document.getElementById("sel-p2").value;
   if (!idCandidato) return;
   mostrarLoading("Cargando respuestas...");
-  const res = await api({ action:"getCalificaciones", idCandidato });
+  const res = await apiOk({ action:"getCalificaciones", idCandidato });
   ocultarLoading();
+  if (!res.ok) { mostrarToast("No se pudieron cargar las respuestas. Intente de nuevo.", "err"); return; }
 
   const zona = document.getElementById("zona-p2-resp");
   const abiertas = (res.respuestas || []).filter(r => r.tipo === "Abierta" && r.paso === "P2");
@@ -913,12 +930,14 @@ async function guardarCalifP2(pregunta, idCandidato, scs) {
   const nombreCandidato = document.getElementById("sel-p2").options[document.getElementById("sel-p2").selectedIndex].text;
 
   mostrarLoading("Guardando...");
-  const res = await api({ action:"calificar", idCandidato, nombreCandidato, paso:"P2", pregunta, respuesta:"", subcompetencias:scs, calificacion:calif, observaciones:obs });
+  const res = await apiOk({ action:"calificar", idCandidato, nombreCandidato, paso:"P2", pregunta, respuesta:"", subcompetencias:scs, calificacion:calif, observaciones:obs });
   ocultarLoading();
   if (res.ok) {
     const btn = card.querySelector(".btn-guardar-c");
     btn.textContent = "✓ Guardado"; btn.classList.add("guardado");
     mostrarToast("Guardado", "ok");
+  } else {
+    mostrarToast("No se pudo guardar la calificación. Intente de nuevo.", "err");
   }
 }
 
@@ -927,11 +946,9 @@ async function cargarP3() {
   const idCandidato = document.getElementById("sel-p3").value;
   if (!idCandidato) return;
   mostrarLoading("Cargando...");
-  const [candRes, califRes] = await Promise.all([
-    api({ action:"getCandidato", id:idCandidato }),
-    api({ action:"getCandidatos" })
-  ]);
+  const califRes = await apiOk({ action:"getCandidatos" });
   ocultarLoading();
+  if (!califRes.ok) { mostrarToast("No se pudo cargar. Intente de nuevo.", "err"); return; }
 
   const zona = document.getElementById("zona-p3-calif");
   const candidatos = califRes.candidatos || [];
@@ -981,12 +998,14 @@ async function guardarCalifPaso(paso, pregunta, idCandidato, safeId) {
   const nombreCandidato = document.getElementById(selId).options[document.getElementById(selId).selectedIndex].text;
 
   mostrarLoading("Guardando...");
-  const res = await api({ action:"calificar", idCandidato, nombreCandidato, paso, pregunta, respuesta:"", subcompetencias:"", calificacion:calif, observaciones:obs });
+  const res = await apiOk({ action:"calificar", idCandidato, nombreCandidato, paso, pregunta, respuesta:"", subcompetencias:"", calificacion:calif, observaciones:obs });
   ocultarLoading();
   if (res.ok) {
     const btn = card.querySelector(".btn-guardar-c");
     btn.textContent = "✓ Guardado"; btn.classList.add("guardado");
     mostrarToast(`Calificación ${paso} guardada`, "ok");
+  } else {
+    mostrarToast("No se pudo guardar la calificación. Intente de nuevo.", "err");
   }
 }
 
@@ -997,7 +1016,7 @@ async function cargarResultados() {
   const nombreCandidato = document.getElementById("sel-res").options[document.getElementById("sel-res").selectedIndex].text;
 
   mostrarLoading("Calculando resultados...");
-  const res = await api({ action:"calcularResultados", idCandidato });
+  const res = await apiOk({ action:"calcularResultados", idCandidato });
   ocultarLoading();
 
   const zona = document.getElementById("zona-resultados-data");
@@ -1098,7 +1117,12 @@ async function registrarCandidato() {
   if (!nombre || !usuario) { mostrarToast("Complete nombre y usuario", "err"); return; }
 
   mostrarLoading("Registrando candidato...");
-  const res = await api({ action:"registrarCandidato", nombre, usuario, fecha, cargo:"Analista de Soporte TI" });
+  let res;
+  try {
+    res = await api({ action:"registrarCandidato", nombre, usuario, fecha, cargo:"Analista de Soporte TI" });
+  } catch (e) {
+    res = { ok: false, error: "Sin respuesta del servidor. Revise la lista de candidatos antes de volver a intentar." };
+  }
   ocultarLoading();
 
   const div = document.getElementById("reg-resultado");
@@ -1116,7 +1140,7 @@ async function registrarCandidato() {
 }
 
 async function listarCandidatos() {
-  const res = await api({ action:"getCandidatos" });
+  const res = await apiOk({ action:"getCandidatos" });
   const div = document.getElementById("lista-candidatos");
   if (!res.ok || !res.candidatos.length) {
     div.innerHTML = `<p style="color:var(--gris2);font-size:14px">No hay candidatos registrados.</p>`;
