@@ -231,7 +231,8 @@ const estado = {
   pasos: ["M1","M2","M3","P3"],
   tiempos: { M1: null, M2: null, M3: null, P3: null },
   inicioMomento: null,
-  carpetaDrive: null
+  carpetaDrive: null,
+  progreso: null
 };
 
 // ── UTILIDADES ─────────────────────────────────────────────
@@ -276,6 +277,59 @@ async function apiSeguro(params, intentos = 3, timeoutMs = 30000) {
   throw ultimoError;
 }
 
+function claveBorrador(paso) { return "evalti_borrador_" + estado.idCandidato + "_" + paso; }
+function claveInicio(paso) { return "evalti_inicio_" + estado.idCandidato + "_" + paso; }
+
+function guardarBorrador() {
+  try {
+    if (estado.rol !== "candidato") return;
+    const paso = estado.pasos[estado.pasoActual];
+    if (paso === "P3") return;
+    const datos = {};
+    document.querySelectorAll("#main-content textarea.resp-abierta").forEach(ta => {
+      datos[ta.id.replace("ta-", "")] = ta.value;
+    });
+    document.querySelectorAll("#main-content input[type=radio]:checked").forEach(r => {
+      datos[r.name] = r.value;
+    });
+    localStorage.setItem(claveBorrador(paso), JSON.stringify(datos));
+  } catch (e) {}
+}
+
+function restaurarBorrador(paso) {
+  try {
+    const raw = localStorage.getItem(claveBorrador(paso));
+    if (!raw) return;
+    const datos = JSON.parse(raw);
+    Object.keys(datos).forEach(cod => {
+      const ta = document.getElementById("ta-" + cod);
+      if (ta) { ta.value = datos[cod]; return; }
+      const radio = document.querySelector(`input[name="${cod}"][value="${datos[cod]}"]`);
+      if (radio) { radio.checked = true; selOpc(cod, datos[cod]); }
+    });
+  } catch (e) {}
+}
+
+function iniciarCronometro(paso) {
+  let t = 0;
+  try { t = parseInt(localStorage.getItem(claveInicio(paso)) || "0", 10); } catch (e) {}
+  if (!t || t > Date.now()) {
+    t = Date.now();
+    try { localStorage.setItem(claveInicio(paso), String(t)); } catch (e) {}
+  }
+  estado.inicioMomento = t;
+}
+
+function limpiarLocal(paso) {
+  try {
+    localStorage.removeItem(claveBorrador(paso));
+    localStorage.removeItem(claveInicio(paso));
+  } catch (e) {}
+}
+
+document.getElementById("main-content").addEventListener("input", guardarBorrador);
+document.getElementById("main-content").addEventListener("change", guardarBorrador);
+
 function formatMin(seg) {
   if (!seg) return "--";
   const m = Math.floor(seg/60), s = seg%60;
@@ -313,6 +367,7 @@ async function doLogin() {
       estado.rol    = res.rol;
       estado.nombre = res.nombre;
       if (res.id) estado.idCandidato = res.id;
+      estado.progreso = res.tiempos || null;
       iniciarApp();
     } else {
       const err = document.getElementById("login-error");
@@ -355,7 +410,16 @@ async function iniciarApp() {
 // ══════════════════════════════════════════════════════════
 function renderCandidato() {
   estado.pasoActual = 0;
-  estado.inicioMomento = Date.now();
+  const t = estado.progreso;
+  if (t) {
+    estado.pasos.forEach(p => {
+      if (t[p] !== null && t[p] !== undefined) estado.tiempos[p] = t[p];
+    });
+    while (estado.pasoActual < estado.pasos.length - 1 &&
+           estado.tiempos[estado.pasos[estado.pasoActual]] !== null) {
+      estado.pasoActual++;
+    }
+  }
   renderPaso();
 }
 
@@ -377,6 +441,7 @@ function renderBarraProgreso() {
 function renderPaso() {
   const main = document.getElementById("main-content");
   const paso = estado.pasos[estado.pasoActual];
+  iniciarCronometro(paso);
 
   if (paso === "P3") { renderP3(); return; }
 
@@ -442,6 +507,7 @@ function renderPaso() {
     <button class="btn-sig" id="btn-sig" onclick="avanzarPaso()">${btnLabel}</button>`;
 
   main.innerHTML = html;
+  restaurarBorrador(paso);
   window.scrollTo(0,0);
 }
 
@@ -504,6 +570,7 @@ async function avanzarPaso() {
   }
   ocultarLoading();
 
+  limpiarLocal(paso);
   estado.tiempos[paso] = segs;
   estado.pasoActual++;
   estado.inicioMomento = Date.now();
@@ -617,6 +684,7 @@ async function finalizarP3() {
     return;
   }
   ocultarLoading();
+  limpiarLocal("P3");
   estado.tiempos.P3 = segs;
   renderFinalCandidato();
 }
