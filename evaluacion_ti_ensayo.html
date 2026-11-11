@@ -343,8 +343,6 @@ async function iniciarApp() {
   if (res.ok) {
     estado.preguntas = res.preguntas || [];
     if (estado.rol === "candidato") {
-      const cand = await api({ action:"getCandidato", id: estado.idCandidato });
-      if (cand.ok) estado.carpetaDrive = cand.carpeta;
       renderCandidato();
     } else {
       renderEntrevistador(res.candidatos || []);
@@ -597,6 +595,33 @@ function toggleConfirm() {
 }
 
 async function finalizarP3() {
+  const btn = document.getElementById("btn-finalizar");
+  if (btn) btn.disabled = true;
+  const segs = Math.round((Date.now() - estado.inicioMomento) / 1000);
+
+  mostrarLoading("Finalizando evaluación...");
+  try {
+    await apiSeguro({
+      action: "guardarMomento",
+      idCandidato: estado.idCandidato,
+      nombreCandidato: estado.nombre,
+      momento: "P3",
+      paso: "P3",
+      tiempo: formatMin(segs),
+      respuestas: JSON.stringify([{ pregunta: "P3-INFORME", respuesta: "Candidato confirmó subida del informe a Drive", tipo: "Informe" }])
+    });
+  } catch (e) {
+    ocultarLoading();
+    if (btn) btn.disabled = false;
+    alert("No se pudo finalizar. Espera unos segundos y pulsa de nuevo 'Finalizar'.");
+    return;
+  }
+  ocultarLoading();
+  estado.tiempos.P3 = segs;
+  renderFinalCandidato();
+}
+
+async function finalizarP3Viejo() {
   const segs = Math.round((Date.now() - estado.inicioMomento) / 1000);
   estado.tiempos.P3 = segs;
 
